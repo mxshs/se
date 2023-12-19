@@ -1,31 +1,18 @@
 #include <drogon/HttpAppFramework.h>
+#include <drogon/HttpResponse.h>
 #include <filesystem>
 #include <fstream>
 #include "lib/core/se.h"
 
 using namespace std;
 
-se::Cache CA = se::Cache("path/to/directory/with/documents");
+se::Cache CA = se::Cache("/");
 se::SE ENGINE = se::SE(CA);
 
 void indexPage(const drogon::HttpRequestPtr &req, 
         function<void(const drogon::HttpResponsePtr &)> &&callback) {
-    auto response = drogon::HttpResponse::newHttpResponse();
 
-    response->setBody(R"(
-    <html>
-        <head>
-            <script src="https://unpkg.com/htmx.org@1.9.9"></script>
-        </head>
-        <body>
-            <form hx-get="/search" hx-target="#result">
-                <input type="text" name="search">
-                <input type="submit" value="Search">
-            </form>
-            <div id="result"></div>
-        </body>
-    </html>
-    )");
+    auto response = drogon::HttpResponse::newHttpViewResponse("index_page");
 
     callback(response);
 };
@@ -51,17 +38,17 @@ void lookup(const drogon::HttpRequestPtr &req,
     }
 
     vector<pair<string, float>> result = ENGINE.search(q + " ");
+    vector<string> shortText;
 
-    string responseBody = "<div>";
+    for (int idx = 0; idx < result.size(); idx++) {
+        shortText.push_back(textMatch(result[idx].first, q + " "));
+    }
 
-    for (auto const [path, val]: result) {
-        responseBody += "<p><a href=\"" + path + "\">" + path + "</a></p>";
-    };
+    drogon::HttpViewData data;
+    data.insert("result", result);
+    data.insert("shortText", shortText);
 
-    responseBody += "</div>";
-    auto response = drogon::HttpResponse::newHttpResponse();
-
-    response->setBody(responseBody);
+    auto response = drogon::HttpResponse::newHttpViewResponse("search_results", data);
 
     callback(response);
 };
@@ -70,7 +57,6 @@ void loadDoc(const drogon::HttpRequestPtr &req,
     function<void(const drogon::HttpResponsePtr &)> &&callback,
     string path) {
 
-    auto response = drogon::HttpResponse::newHttpResponse();
 
     ifstream file;
     char* result = new char[filesystem::file_size(path)];
@@ -78,7 +64,10 @@ void loadDoc(const drogon::HttpRequestPtr &req,
     file.open(path);
     file.read(result, filesystem::file_size(path));
 
-    response->setBody(result);
+    drogon::HttpViewData data;
+    data.insert("doc", result);
+
+    auto response = drogon::HttpResponse::newHttpViewResponse("doc_page", data);
 
     callback(response);
 };

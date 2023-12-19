@@ -1,0 +1,8 @@
+<%layout base_layout%>
+<div>
+    <form hx-get="/search" hx-target="#result">
+        <input type="text" name="search">
+        <input type="submit" value="Search">
+    </form>
+    <div id="result"></div>
+</div>

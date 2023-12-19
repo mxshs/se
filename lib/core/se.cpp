@@ -1,8 +1,10 @@
 #include <algorithm>
 #include <cctype>
+#include <cstdio>
 #include <ctime>
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 #include <map>
 #include <set>
 #include <string>
@@ -83,6 +85,8 @@ void Cache::cacheFile(filesystem::directory_entry file) {
             word += c;
         }
     }
+
+    reader.close();
 }
 
 SE::SE(Cache cache): cache(cache) {};
@@ -146,6 +150,82 @@ float SE::TFIDF(string term, string path) {
         }
     }
 
+    reader.close();
+
     return counter / this->cache.getTotalFrequency(term);
 }
 
+std::string textMatch(std::string path, std::string query) {
+    string word = "";
+    vector<string> words = vector<string>{};
+
+    for (int idx = 0; idx < query.length(); idx++) {
+        char c = query[idx];
+
+        if (c == 0 || !isalnum(c)) {
+            words.push_back(word);
+            word = "";
+        } else {
+            word += c;
+        }
+    }
+
+    word = "";
+    ifstream reader;
+    int start = 0;
+    int offset = 0;
+    int bestMatch = 0;
+    int curMatch = 0;
+    int bestSegment = 0;
+
+    reader.open(path);
+
+    do {
+        char c = reader.get();
+
+        if (c == 0 || !isalnum(c)) {
+            if (find(words.begin(), words.end(), word) != words.end()) {
+                curMatch++;
+            }
+            if (offset - start > 100) {
+                if (curMatch > bestMatch) {
+                    bestMatch = curMatch;
+                    bestSegment = start;
+                }
+                start = offset;
+                curMatch = 0;
+            }
+            word = "";
+        } else {
+            word += c;
+        }
+
+        offset++;
+    } while (reader.peek() != EOF);
+
+    string result;
+    reader.seekg(bestSegment, ios_base::beg);
+
+    for (int idx = 0; idx < 1000; idx++) {
+        if (reader.eof()) break;
+        result += reader.get();
+    }
+
+    reader.close();
+
+    return result;
+}
+
+string cleanText(string text) {
+    string res;
+
+    for (int idx = 0; idx < text.length(); idx++) {
+        char c = text[idx];
+
+        if (c == 0 || isalnum(c)) {
+            res.push_back(c);
+        }
+    }
+
+    return res;
+}

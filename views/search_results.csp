@@ -1,0 +1,10 @@
+<%c++ auto result=@@.get<std::vector<std::pair<std::string, float>>>("result");%>
+<%c++ auto shortText=@@.get<std::vector<std::string>>("shortText");%>
+<div>
+    <%c++ for (int idx = 0; idx < result.size(); idx++) {%>
+        <p>
+            <a href="{%result[idx].first%}">{%result[idx].first%}</a>
+        </p>
+        <p>{%shortText[idx]%}</p>
+    <%c++}%>
+</div>

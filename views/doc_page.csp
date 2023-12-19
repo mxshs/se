@@ -1,0 +1,5 @@
+<%layout base_layout%>
+<%c++ auto doc=@@.get<char*>("doc");%>
+<md-block>
+    {%doc%}
+</md-block>

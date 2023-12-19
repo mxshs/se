@@ -3,6 +3,9 @@
 #include "vector"
 #include "map"
 
+std::string textMatch(std::string, std::string);
+std::string cleanText(std::string);
+
 namespace se
 {
     struct Cache {
@@ -18,7 +21,6 @@ namespace se
             void scanAllDocs(std::string);
             void cacheFile(std::filesystem::directory_entry);
     };
-
 
     struct SE {
         public:
