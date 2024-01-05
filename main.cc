@@ -2,15 +2,12 @@
 #include <drogon/HttpResponse.h>
 #include <filesystem>
 #include <fstream>
-#include "lib/core/se.h"
+#include "lib/se_core/se.h"
 
-using namespace std;
-
-se::Cache CA = se::Cache("/");
-se::SE ENGINE = se::SE(CA);
+SE ENGINE = SE();
 
 void indexPage(const drogon::HttpRequestPtr &req, 
-        function<void(const drogon::HttpResponsePtr &)> &&callback) {
+        std::function<void(const drogon::HttpResponsePtr &)> &&callback) {
 
     auto response = drogon::HttpResponse::newHttpViewResponse("index_page");
 
@@ -18,11 +15,11 @@ void indexPage(const drogon::HttpRequestPtr &req,
 };
 
 void lookup(const drogon::HttpRequestPtr &req, 
-    function<void(const drogon::HttpResponsePtr &)> &&callback
+    std::function<void(const drogon::HttpResponsePtr &)> &&callback
     ) {
 
-    string query = req->query();
-    string q;
+    std::string query = req->query();
+    std::string q;
 
     for (int idx = 0; idx < query.length(); idx++) {
         if (query[idx] == '=') {
@@ -37,11 +34,11 @@ void lookup(const drogon::HttpRequestPtr &req,
         }
     }
 
-    vector<pair<string, float>> result = ENGINE.search(q + " ");
-    vector<string> shortText;
+    std::vector<std::pair<std::string, float>> result = ENGINE.search(q);
+    std::vector<std::string> shortText;
 
     for (int idx = 0; idx < result.size(); idx++) {
-        shortText.push_back(textMatch(result[idx].first, q + " "));
+        shortText.push_back(textMatch(result[idx].first, q));
     }
 
     drogon::HttpViewData data;
@@ -54,15 +51,14 @@ void lookup(const drogon::HttpRequestPtr &req,
 };
 
 void loadDoc(const drogon::HttpRequestPtr &req, 
-    function<void(const drogon::HttpResponsePtr &)> &&callback,
-    string path) {
+    std::function<void(const drogon::HttpResponsePtr &)> &&callback,
+    std::string path) {
 
-
-    ifstream file;
-    char* result = new char[filesystem::file_size(path)];
+    std::ifstream file;
+    char* result = new char[std::filesystem::file_size(path)];
 
     file.open(path);
-    file.read(result, filesystem::file_size(path));
+    file.read(result, std::filesystem::file_size(path));
 
     drogon::HttpViewData data;
     data.insert("doc", result);
